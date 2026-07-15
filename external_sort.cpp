@@ -20,6 +20,10 @@ inline std::string _GetRunFileName(int run_index) {
 
 std::vector<std::string> GenerateInitialRuns(std::ifstream &input, int k) {
     _data_count_cache.clear(); // Clear cache
+    // Check if save directory exists, if not create it
+    if (!std::filesystem::exists(_SAVE_DIR)) {
+        std::filesystem::create_directory(_SAVE_DIR);
+    }
 
     std::vector<std::string> run_files; // Return vector of run file names
 
