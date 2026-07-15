@@ -114,7 +114,7 @@ std::string _Merge(const std::vector<std::size_t>& to_merge, const std::vector<s
 
     // Close all the streams
     for (auto& in : inputs) if (in.is_open()) in.close();
-    output.close();
+    if (output.is_open()) output.close();
 
     _data_count_cache[merged_file] = merged_data_count; // Cache the data count
     return merged_file; // Return the name of the merged file
