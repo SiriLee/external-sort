@@ -17,7 +17,7 @@
 
 ## 二、代码构建过程
 
-本项目全程使用 Git 进行版本管理（共 22 次提交），采用渐进式迭代开发。以下按提交顺序梳理构建过程。
+本项目全程使用 Git 进行版本管理（共约 30 次提交），采用渐进式迭代开发。以下按提交顺序梳理构建过程。
 
 ### 2.1 第一阶段：置换-选择排序
 
@@ -55,9 +55,8 @@
 
 - `bc45439`: 运行时发现 `save/` 目录不存在时出错，修改：预先检查并 `create_directory`
 - `d3a5526`：修复 Huffman 选择逻辑错误——原判断条件 `!current_run_files.empty()` 仅检查 vector 是否为空（恒为真），修正为 `_data_count_cache[current_run_files[idx]] > 0`，正确跳过空段
-- `b0a7433`：Windows 测试时将 `N` 临时改为 `10000`（因系统内存限制，10000000 无法运行）
-- `dcb4ac1`：Linux 测试前将 `N` 从 `10000` 恢复为 `10000000`
-- `ba5b20a`：将 Phase 1 缓冲区大小从 `k`（存在歧义）改为固定值 `M = 4096`，与归并路数解耦
+- `ba5b20a`：将 Phase 1 缓冲区大小从 `k`（存在歧义）改为固定值 `M = 4096`，与归并路数解耦；同时解决了 Windows 下大 N 运的内存问题
+- `713896d`：Windows 验证通过后，将 `N` 恢复为 `10000000`，此后两个平台均可正常运行大 N 测试
 
 ---
 
@@ -108,8 +107,7 @@
 
 ### 5.1 测试配置
 
-- **Linux**：N = 10,000,000
-- **Windows**：N = 10,000（受系统特殊限制，10000000 无法运行），其余配置相同
+- **统一配置**：N = 10,000,000，两个平台均使用相同参数
 
 ### 5.2 Linux (WSL2) 测试结果
 
@@ -148,7 +146,36 @@ Phase 2: PASS
 
 ### 5.3 Windows 测试结果
 
-Windows 环境下 N = 10,000,000 因系统内存限制无法运行，将 `main.cpp` 中 `N` 改为 `10000` 后，k = 4 和 k = 64 两种情况下两个阶段均正确通过。
+Windows 环境下 N = 10,000,000，k = 4 和 k = 64 两种情况下两个阶段均正确通过。
+
+#### k = 64
+
+```
+  Total Check: 10000000 numbers across 1222 runs
+Phase 1: PASS
+Phase 2: PASS
+
+====== Final Step Score Breakdown ======
+  k values tested          : 64
+  Peak Memory              : 5.77344 MB
+  File Read Ops            : 29625036
+  File Write Ops           : 29625036
+========================================
+```
+
+#### k = 4
+```
+  Total Check: 10000000 numbers across 1222 runs
+Phase 1: PASS
+Phase 2: PASS
+
+====== Final Step Score Breakdown ======
+  k values tested          : 4
+  Peak Memory              : 4.72266 MB
+  File Read Ops            : 62130924
+  File Write Ops           : 62130924
+========================================
+```
 
 ---
 
