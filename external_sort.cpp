@@ -103,10 +103,13 @@ std::string _Merge(const std::vector<std::size_t>& to_merge, const std::vector<s
 
     std::string merged_file = _GetMergedFileName(run_files.size()); // Name for the merged file
     std::ofstream output(merged_file); // Output stream for the merged file
+    std::size_t merged_data_count = 0; // Count of data items in the merged file
 
     while(!pq.empty()) {
         auto [val, idx] = pq.top(); pq.pop();
         IntWriter(output, val); // Write the smallest value
+        ++merged_data_count;
+
         int next_num;
         if (IntReader(inputs[idx], next_num)) {
             pq.push({next_num, idx}); // Push the next number from the same run
@@ -117,6 +120,7 @@ std::string _Merge(const std::vector<std::size_t>& to_merge, const std::vector<s
     for (auto& in : inputs) if (in.is_open()) in.close();
     output.close();
 
+    _data_count_cache[merged_file] = merged_data_count; // Cache the data count
     return merged_file; // Return the name of the merged file
 }
 
@@ -126,11 +130,15 @@ std::string KWayMerge(const std::vector<std::string> &run_files, int k) {
 
     std::size_t n = run_files.size(); // Total number of runs
 
+    std::vector<std::string> current_run_files = run_files; // Current set of run files
+
     std::size_t d = (k - 1 - (n - 1) % (k - 1)) % (k - 1); // Number of dummy runs needed
     for (std::size_t i = 0; i < d; ++i) {
         std::string dummy_run_file = _GetRunFileName(n + i); // Create file name
         std::ofstream dummy_output(dummy_run_file); // Create dummy run file
         dummy_output.close();
+        
+        current_run_files.push_back(dummy_run_file); // Add to current run files
         _data_count_cache[dummy_run_file] = 0; // Cache the data count
     }
 
@@ -141,16 +149,27 @@ std::string KWayMerge(const std::vector<std::string> &run_files, int k) {
         std::size_t data_count = _data_count_cache[_GetRunFileName(i)];
         pq.push({data_count, i});
     }
-
+    
     while (pq.size() > 1) {
         // Select k runs with the smallest data counts
         std::vector<std::size_t> to_merge;
         for (int i = 0; i < k && !pq.empty(); ++i) {
             auto [cnt, idx] = pq.top(); pq.pop();
-            if (idx >= 0 && !run_files.empty()) {
+            if (idx >= 0 && !current_run_files.empty()) {
                 to_merge.push_back(idx);
             }
         }
-        std::string merged_file = _Merge(to_merge, run_files);
+        // Merge the selected runs
+        std::string merged_file = _Merge(to_merge, current_run_files);
+        
+        current_run_files.push_back(merged_file); // Add the merged file to the list
+        std::size_t merged_data_count = _data_count_cache[merged_file];
+        pq.push({merged_data_count, current_run_files.size() - 1}); // Push back into the priority queue
     }
+
+    // Rename the final merged file to the output file
+    std::string final_merged_file = current_run_files.back();
+    std::filesystem::rename(final_merged_file, OUTPUT_FILE);
+
+    return OUTPUT_FILE;
 }
