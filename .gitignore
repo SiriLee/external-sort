@@ -5,3 +5,6 @@ bin/
 save/
 *.exe
 *.o
+
+benchmark_big.input
+10242140407_result.txt
