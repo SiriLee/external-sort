@@ -18,6 +18,10 @@ inline std::string _GetRunFileName(int run_index) {
     return SAVE_DIR + "run_" + std::to_string(run_index) + ".txt";
 }
 
+inline std::string _GetMergedFileName(int merge_index) {
+    return SAVE_DIR + "merged_" + std::to_string(merge_index) + ".txt";
+}
+
 std::vector<std::string> GenerateInitialRuns(std::ifstream &input, int k) {
     _data_count_cache.clear(); // Clear cache
 
@@ -76,13 +80,45 @@ std::vector<std::string> GenerateInitialRuns(std::ifstream &input, int k) {
     // Close the last run file if it's still open
     if (current_run_output.is_open()) {
         current_run_output.close();
-        _data_count_cache[current_run_file] = current_run_data_count; // Cache the data
+        _data_count_cache[current_run_file] = current_run_data_count; // Cache the data count
     }
 
     return run_files;
 }
 
+std::string _Merge(const std::vector<std::size_t>& to_merge, const std::vector<std::string>& run_files) {
+    std::size_t k = to_merge.size();
 
+    using Entry = std::pair<int, std::size_t>; // Pair of (value, file_index)
+    std::priority_queue<Entry, std::vector<Entry>, std::greater<Entry>> pq;
+
+    // Open input streams for the runs to merge
+    std::vector<std::ifstream> inputs(k);
+    for (std::size_t i = 0; i < k; ++i) inputs[i].open(run_files[to_merge[i]]);
+
+    for (std::size_t i = 0; i < k; ++i) {
+        int num;
+        if (IntReader(inputs[i], num)) pq.push({num, i});
+    }
+
+    std::string merged_file = _GetMergedFileName(run_files.size()); // Name for the merged file
+    std::ofstream output(merged_file); // Output stream for the merged file
+
+    while(!pq.empty()) {
+        auto [val, idx] = pq.top(); pq.pop();
+        IntWriter(output, val); // Write the smallest value
+        int next_num;
+        if (IntReader(inputs[idx], next_num)) {
+            pq.push({next_num, idx}); // Push the next number from the same run
+        }
+    }
+
+    // Close all the streams
+    for (auto& in : inputs) if (in.is_open()) in.close();
+    output.close();
+
+    return merged_file; // Return the name of the merged file
+}
 
 
 std::string KWayMerge(const std::vector<std::string> &run_files, int k) {
@@ -95,6 +131,7 @@ std::string KWayMerge(const std::vector<std::string> &run_files, int k) {
         std::string dummy_run_file = _GetRunFileName(n + i); // Create file name
         std::ofstream dummy_output(dummy_run_file); // Create dummy run file
         dummy_output.close();
+        _data_count_cache[dummy_run_file] = 0; // Cache the data count
     }
 
     using Entry = std::pair<std::size_t, std::size_t>; // Pair of (data_count, file_index)
@@ -105,4 +142,15 @@ std::string KWayMerge(const std::vector<std::string> &run_files, int k) {
         pq.push({data_count, i});
     }
 
+    while (pq.size() > 1) {
+        // Select k runs with the smallest data counts
+        std::vector<std::size_t> to_merge;
+        for (int i = 0; i < k && !pq.empty(); ++i) {
+            auto [cnt, idx] = pq.top(); pq.pop();
+            if (idx >= 0 && !run_files.empty()) {
+                to_merge.push_back(idx);
+            }
+        }
+        std::string merged_file = _Merge(to_merge, run_files);
+    }
 }
