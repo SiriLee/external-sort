@@ -94,7 +94,10 @@ std::string _Merge(const std::vector<std::size_t>& to_merge, const std::vector<s
 
     // Open input streams for the runs to merge
     std::vector<std::ifstream> inputs(k);
-    for (std::size_t i = 0; i < k; ++i) inputs[i].open(run_files[to_merge[i]]);
+    for (std::size_t i = 0; i < k; ++i) {
+        if (inputs[i].is_open()) inputs[i].close();
+        inputs[i].open(run_files[to_merge[i]]);
+    }
 
     for (std::size_t i = 0; i < k; ++i) {
         int num;
@@ -107,8 +110,9 @@ std::string _Merge(const std::vector<std::size_t>& to_merge, const std::vector<s
 
     while(!pq.empty()) {
         auto [val, idx] = pq.top(); pq.pop();
-        IntWriter(output, val); // Write the smallest value
-        ++merged_data_count;
+        if (IntWriter(output, val)) { // Write the smallest value
+            ++merged_data_count;
+        }
 
         int next_num;
         if (IntReader(inputs[idx], next_num)) {
@@ -126,7 +130,7 @@ std::string _Merge(const std::vector<std::size_t>& to_merge, const std::vector<s
 
 
 std::string KWayMerge(const std::vector<std::string> &run_files, int k) {
-    if (run_files.empty() || k <= 0) return "";
+    if (run_files.empty() || k <= 1) return "";
 
     std::size_t n = run_files.size(); // Total number of runs
 
