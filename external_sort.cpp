@@ -25,7 +25,7 @@ std::vector<std::string> GenerateInitialRuns(std::ifstream &input, int k) {
 
     int M = k; // buffer size
 
-    using Entry = std::pair<int, int>; // Pair of (index, value)
+    using Entry = std::pair<std::size_t, int>; // Pair of (index, value)
     std::priority_queue<Entry, std::vector<Entry>, std::greater<Entry>> pq; // Min-heap
 
     for (int i = 0; i < M; ++i) {
@@ -36,10 +36,10 @@ std::vector<std::string> GenerateInitialRuns(std::ifstream &input, int k) {
 
     if (pq.empty()) return {}; // No runs generated
     
-    int current_run_index = 0; // Index of the current run
+    std::size_t current_run_index = 0; // Index of the current run
     std::string current_run_file = _GetRunFileName(current_run_index); // Current run file name
     std::ofstream current_run_output; // Output stream for the current run file
-    size_t current_run_data_count = 0; // Count of data items in the current run
+    std::size_t current_run_data_count = 0; // Count of data items in the current run
 
     while (!pq.empty()) {
         auto [index, value] = pq.top(); pq.pop();
@@ -68,7 +68,7 @@ std::vector<std::string> GenerateInitialRuns(std::ifstream &input, int k) {
         // Read the next number
         int next_num;
         if (IntReader(input, next_num)) {
-            int new_index = (next_num >= value) ? index : index + 1;
+            std::size_t new_index = (next_num >= value) ? index : index + 1;
             pq.push({new_index, next_num});
         }
     }
@@ -87,4 +87,22 @@ std::vector<std::string> GenerateInitialRuns(std::ifstream &input, int k) {
 
 std::string KWayMerge(const std::vector<std::string> &run_files, int k) {
     if (run_files.empty() || k <= 0) return "";
+
+    std::size_t n = run_files.size(); // Total number of runs
+
+    std::size_t d = (k - 1 - (n - 1) % (k - 1)) % (k - 1); // Number of dummy runs needed
+    for (std::size_t i = 0; i < d; ++i) {
+        std::string dummy_run_file = _GetRunFileName(n + i); // Create file name
+        std::ofstream dummy_output(dummy_run_file); // Create dummy run file
+        dummy_output.close();
+    }
+
+    using Entry = std::pair<std::size_t, std::size_t>; // Pair of (data_count, file_index)
+    std::priority_queue<Entry, std::vector<Entry>, std::greater<Entry>> pq; // Min-heap
+
+    for (std::size_t i = 0; i < n + d; ++i) {
+        std::size_t data_count = _data_count_cache[_GetRunFileName(i)];
+        pq.push({data_count, i});
+    }
+
 }
