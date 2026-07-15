@@ -7,7 +7,9 @@
 #include <fstream>
 #include <filesystem>
 
-const std::string SAVE_DIR = "save/";
+static const std::string SAVE_DIR = "save/";
+
+static const std::string OUTPUT_FILE = SAVE_DIR + "sorted_output.txt";
 
 inline std::string GetRunFileName(int run_index) {
     return SAVE_DIR + "run_" + std::to_string(run_index) + ".txt";
@@ -73,5 +75,5 @@ std::vector<std::string> GenerateInitialRuns(std::ifstream &input, int k) {
 
 
 std::string KWayMerge(const std::vector<std::string> &run_files, int k) {
-    
+    if (run_files.empty() || k <= 0) return "";
 }
