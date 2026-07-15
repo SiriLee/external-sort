@@ -27,7 +27,7 @@ std::vector<std::string> GenerateInitialRuns(std::ifstream &input, int k) {
 
     std::vector<std::string> run_files; // Return vector of run file names
 
-    int M = k; // buffer size
+    int M = 4096; // buffer size (k is ambiguous, using a fixed buffer size for initial runs)
 
     using Entry = std::pair<std::size_t, int>; // Pair of (index, value)
     std::priority_queue<Entry, std::vector<Entry>, std::greater<Entry>> pq; // Min-heap

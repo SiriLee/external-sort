@@ -23,7 +23,7 @@
 
 `31b61f7` — **核心实现**。从内存版原型出发，将其适配为文件 I/O 版本：
 
-- 用 `std::priority_queue` 维护容量为 k 的最小堆，元素类型 `pair<size_t, int>`，按 `(段索引, 数值)` 字典序排序
+- 用 `std::priority_queue` 维护容量为 4096 的最小堆（缓冲区大小 `M = 4096`，独立于归并路数 `k`），元素类型 `pair<size_t, int>`，按 `(段索引, 数值)` 字典序排序
 - 段索引机制：新数 < 刚输出的数时标记为下一段（`index + 1`），否则留在当前段（`index`）——即"冻结"语义
 - 段索引变大时自动切换到新输出文件，实现段的自然切换
 - 每个元素出堆 → 写入当前段文件 → 读入下一元素 → 计算段索引 → 入堆，单次循环完成
@@ -57,6 +57,7 @@
 - `d3a5526`：修复 Huffman 选择逻辑错误——原判断条件 `!current_run_files.empty()` 仅检查 vector 是否为空（恒为真），修正为 `_data_count_cache[current_run_files[idx]] > 0`，正确跳过空段
 - `b0a7433`：Windows 测试时将 `N` 临时改为 `10000`（因系统内存限制，10000000 无法运行）
 - `dcb4ac1`：Linux 测试前将 `N` 从 `10000` 恢复为 `10000000`
+- `to fill`：将 Phase 1 缓冲区大小从 `k`（存在歧义）改为固定值 `M = 4096`，与归并路数解耦
 
 ---
 
@@ -93,13 +94,13 @@
 
 ## 四、复杂度分析
 
-- **第一阶段**：每个元素一次堆操作，$O(N \log k)$
+- **第一阶段**：每个元素一次堆操作，$O(N \log M)$（$M = 4096$ 为缓冲区大小）
 - **第二阶段单趟归并**：每个元素一次堆操作，$O(N \log k)$
-- **归并趟数**：置换-选择在随机数据下约产生 $R \approx N/(2k)$ 个初始段，Huffman 树归并约需 $\lceil\log_k R\rceil$ 趟
+- **归并趟数**：置换-选择在随机数据下约产生 $R \approx N/(2M)$ 个初始段，Huffman 树归并约需 $\lceil\log_k R\rceil$ 趟
 
-**总体时间复杂度**：$O(N \log k \cdot \log_k R)$。以 $k=64$、$N=10^7$ 为例，$R \approx 78125$，约需 3 趟归并。
+**总体时间复杂度**：$O(N \log M \cdot \log_k R)$。以 $M=4096$、$N=10^7$ 为例，$R \approx 1222$。k=64 时约需 2 趟归并，k=4 时约需 5 趟。
 
-**空间复杂度**：$O(k + R)$，实际内存开销远小于数据总量（$k \ll N, R \ll N$）。
+**空间复杂度**：$O(M + R)$，实际内存开销远小于数据总量（$M, R \ll N$）。
 
 ---
 
@@ -118,30 +119,30 @@
 #### k = 64
 
 ```
-  Total Check: 10000000 numbers across 78125 runs
+  Total Check: 10000000 numbers across 1222 runs
 Phase 1: PASS
 Phase 2: PASS
 
 ====== Final Step Score Breakdown ======
   k values tested          : 64
-  Peak Memory              : 24.1133 MB
-  File Read Ops            : 39576717
-  File Write Ops           : 39576717
+  Peak Memory              : 6.36719 MB
+  File Read Ops            : 29625502
+  File Write Ops           : 29625502
 ========================================
 ```
 
 #### k = 4
 
 ```
-  Total Check: 10000000 numbers across 1249442 runs
+  Total Check: 10000000 numbers across 1222 runs
 Phase 1: PASS
 Phase 2: PASS
 
 ====== Final Step Score Breakdown ======
   k values tested          : 4
-  Peak Memory              : 374.879 MB
-  File Read Ops            : 111499329
-  File Write Ops           : 111499329
+  Peak Memory              : 6.36719 MB
+  File Read Ops            : 62129962
+  File Write Ops           : 62129962
 ========================================
 ```
 
