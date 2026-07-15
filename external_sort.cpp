@@ -6,16 +6,21 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
+#include <unordered_map>
 
 static const std::string SAVE_DIR = "save/";
 
 static const std::string OUTPUT_FILE = SAVE_DIR + "sorted_output.txt";
 
-inline std::string GetRunFileName(int run_index) {
+static std::unordered_map<std::string, std::size_t> _data_count_cache; // File name to data count cache
+
+inline std::string _GetRunFileName(int run_index) {
     return SAVE_DIR + "run_" + std::to_string(run_index) + ".txt";
 }
 
 std::vector<std::string> GenerateInitialRuns(std::ifstream &input, int k) {
+    _data_count_cache.clear(); // Clear cache
+
     std::vector<std::string> run_files; // Return vector of run file names
 
     int M = k; // buffer size
@@ -32,13 +37,16 @@ std::vector<std::string> GenerateInitialRuns(std::ifstream &input, int k) {
     if (pq.empty()) return {}; // No runs generated
     
     int current_run_index = 0; // Index of the current run
+    std::string current_run_file = _GetRunFileName(current_run_index); // Current run file name
     std::ofstream current_run_output; // Output stream for the current run file
+    size_t current_run_data_count = 0; // Count of data items in the current run
 
     while (!pq.empty()) {
         auto [index, value] = pq.top(); pq.pop();
 
         if (index > current_run_index) {
-            // Close the current run file and start a new one
+            // Close the current run file and update the index
+            _data_count_cache[current_run_file] = current_run_data_count; // Cache the data count
             if (current_run_output.is_open()) {
                 current_run_output.close();
             }
@@ -47,13 +55,15 @@ std::vector<std::string> GenerateInitialRuns(std::ifstream &input, int k) {
 
         // Open a new run file if not already open
         if (!current_run_output.is_open()) {
-            std::string current_run_file(GetRunFileName(current_run_index));
+            current_run_file = _GetRunFileName(current_run_index);
             current_run_output.open(current_run_file);
-            run_files.push_back(move(current_run_file));
+            run_files.push_back(current_run_file);
+            current_run_data_count = 0; // Reset data count for the new run
         }
 
         // Write the value to the current run file
         IntWriter(current_run_output, value);
+        ++current_run_data_count;
 
         // Read the next number
         int next_num;
@@ -66,6 +76,7 @@ std::vector<std::string> GenerateInitialRuns(std::ifstream &input, int k) {
     // Close the last run file if it's still open
     if (current_run_output.is_open()) {
         current_run_output.close();
+        _data_count_cache[current_run_file] = current_run_data_count; // Cache the data
     }
 
     return run_files;
