@@ -155,7 +155,7 @@ std::string KWayMerge(const std::vector<std::string> &run_files, int k) {
         std::vector<std::size_t> to_merge;
         for (int i = 0; i < k && !pq.empty(); ++i) {
             auto [cnt, idx] = pq.top(); pq.pop();
-            if (idx >= 0 && !current_run_files.empty()) {
+            if (idx >= 0 && _data_count_cache[current_run_files[idx]] > 0) {
                 to_merge.push_back(idx);
             }
         }
