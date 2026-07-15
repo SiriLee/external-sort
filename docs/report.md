@@ -57,7 +57,7 @@
 - `d3a5526`：修复 Huffman 选择逻辑错误——原判断条件 `!current_run_files.empty()` 仅检查 vector 是否为空（恒为真），修正为 `_data_count_cache[current_run_files[idx]] > 0`，正确跳过空段
 - `b0a7433`：Windows 测试时将 `N` 临时改为 `10000`（因系统内存限制，10000000 无法运行）
 - `dcb4ac1`：Linux 测试前将 `N` 从 `10000` 恢复为 `10000000`
-- `to fill`：将 Phase 1 缓冲区大小从 `k`（存在歧义）改为固定值 `M = 4096`，与归并路数解耦
+- `ba5b20a`：将 Phase 1 缓冲区大小从 `k`（存在歧义）改为固定值 `M = 4096`，与归并路数解耦
 
 ---
 
