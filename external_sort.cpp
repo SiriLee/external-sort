@@ -7,7 +7,7 @@
 #include <fstream>
 #include <filesystem>
 
-
+const std::string SAVE_DIR = "save/";
 
 std::vector<std::string> GenerateInitialRuns(std::ifstream &input, int k) {
     
