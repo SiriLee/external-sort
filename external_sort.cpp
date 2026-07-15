@@ -61,6 +61,7 @@ std::vector<std::string> GenerateInitialRuns(std::ifstream &input, int k) {
         if (!current_run_output.is_open()) {
             current_run_file = _GetRunFileName(current_run_index);
             current_run_output.open(current_run_file);
+            if (!current_run_output.is_open()) return {};
             run_files.push_back(current_run_file);
             current_run_data_count = 0; // Reset data count for the new run
         }
@@ -159,7 +160,7 @@ std::string KWayMerge(const std::vector<std::string> &run_files, int k) {
         std::vector<std::size_t> to_merge;
         for (int i = 0; i < k && !pq.empty(); ++i) {
             auto [cnt, idx] = pq.top(); pq.pop();
-            if (idx >= 0 && _data_count_cache.at(current_run_files[idx]) > 0) {
+            if (_data_count_cache.at(current_run_files[idx]) > 0) {
                 to_merge.push_back(idx);
             }
         }
