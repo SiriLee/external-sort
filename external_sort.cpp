@@ -8,18 +8,18 @@
 #include <filesystem>
 #include <unordered_map>
 
-static const std::string SAVE_DIR = "save/";
+static const std::string _SAVE_DIR = "save/";
 
-static const std::string OUTPUT_FILE = SAVE_DIR + "sorted_output.txt";
+static const std::string _OUTPUT_FILE = _SAVE_DIR + "sorted_output.txt";
 
 static std::unordered_map<std::string, std::size_t> _data_count_cache; // File name to data count cache
 
 inline std::string _GetRunFileName(int run_index) {
-    return SAVE_DIR + "run_" + std::to_string(run_index) + ".txt";
+    return _SAVE_DIR + "run_" + std::to_string(run_index) + ".txt";
 }
 
 inline std::string _GetMergedFileName(int merge_index) {
-    return SAVE_DIR + "merged_" + std::to_string(merge_index) + ".txt";
+    return _SAVE_DIR + "merged_" + std::to_string(merge_index) + ".txt";
 }
 
 std::vector<std::string> GenerateInitialRuns(std::ifstream &input, int k) {
@@ -169,7 +169,7 @@ std::string KWayMerge(const std::vector<std::string> &run_files, int k) {
 
     // Rename the final merged file to the output file
     std::string final_merged_file = current_run_files.back();
-    std::filesystem::rename(final_merged_file, OUTPUT_FILE);
+    std::filesystem::rename(final_merged_file, _OUTPUT_FILE);
 
-    return OUTPUT_FILE;
+    return _OUTPUT_FILE;
 }
