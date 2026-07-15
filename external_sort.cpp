@@ -167,5 +167,7 @@ std::string KWayMerge(const std::vector<std::string> &run_files, int k) {
     std::string final_merged_file = current_run_files.back();
     std::filesystem::rename(final_merged_file, _OUTPUT_FILE);
 
+    // Clear the cache and return the output file name
+    _data_count_cache.clear();
     return _OUTPUT_FILE;
 }
