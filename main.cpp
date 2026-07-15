@@ -65,7 +65,7 @@ bool ReadPlainInt(std::ifstream &input, int &num) {
     }
 #endif
 
-const int N = 10000; // 10000000
+const int N = 10000000;
 const std::array<int, 2> TEST_KS = {4, 64};
 const unsigned int BENCHMARK_SEED = 20260706u;
 
