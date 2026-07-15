@@ -18,10 +18,6 @@ inline std::string _GetRunFileName(int run_index) {
     return _SAVE_DIR + "run_" + std::to_string(run_index) + ".txt";
 }
 
-inline std::string _GetMergedFileName(int merge_index) {
-    return _SAVE_DIR + "merged_" + std::to_string(merge_index) + ".txt";
-}
-
 std::vector<std::string> GenerateInitialRuns(std::ifstream &input, int k) {
     _data_count_cache.clear(); // Clear cache
 
@@ -101,7 +97,7 @@ std::string _Merge(const std::vector<std::size_t>& to_merge, const std::vector<s
         if (IntReader(inputs[i], num)) pq.push({num, i});
     }
 
-    std::string merged_file = _GetMergedFileName(run_files.size()); // Name for the merged file
+    std::string merged_file = _GetRunFileName(run_files.size()); // Name for the merged file
     std::ofstream output(merged_file); // Output stream for the merged file
     std::size_t merged_data_count = 0; // Count of data items in the merged file
 
